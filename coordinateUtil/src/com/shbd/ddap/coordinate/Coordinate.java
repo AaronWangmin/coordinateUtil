@@ -17,7 +17,7 @@ public class Coordinate {
 	public Coordinate(double x, double y, double z) {
 		super();
 		this.re = ConstantHolder.ReferenceEllipsoid.WGS84;
-		this.coordType = CoordinateType.SPATIAL_RECTANGULAR;
+//		this.coordType = CoordinateType.SPATIAL_RECTANGULAR;
 		this.x = x;
 		this.y = y;
 		this.z = z;

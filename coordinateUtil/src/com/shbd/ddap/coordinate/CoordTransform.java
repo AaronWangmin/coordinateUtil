@@ -11,14 +11,9 @@ public class CoordTransform {
 	 * @return 大地坐标（弧度）
 	 */
 	public static Coordinate ECEF2BLH(Coordinate source) {
-		// 如果源坐标类型不是地心地固坐标（XYZ）时，函数中止退出。
-		if (source.getCoordType() != CoordinateType.SPATIAL_RECTANGULAR) {
-			return null;
-		}
-
 		Coordinate target = new Coordinate();
-		target.setRe(source.getRe()); // 设置转换前后的椭球相同
-		target.setCoordType(CoordinateType.GEODETIC); // 设置转换后的坐标为大地坐标(B/L/H)
+		target.setRe(source.getRe());	// 设置转换前后的椭球
+		target.setCoordType(CoordinateType.GEODETIC);	// 设置转换后的坐标为大地坐标(B/L/H)
 
 		double X = source.getX();
 		double Y = source.getY();
@@ -72,6 +67,35 @@ public class CoordTransform {
 		}
 
 		return target;
+	}
+	
+	/**
+	 * 同一参考椭球下，大地坐标(弧度) --> 空间直角坐标
+	 * @param source (rad)
+	 * @return
+	 */
+	public static Coordinate BLH2ECEF(Coordinate source) {	
+		double a = source.getRe().getA();
+		double square_e1 = source.getRe().getSquare_el();
+		
+		double B = source.getX();
+		double L = source.getY();
+		double H = source.getZ();
+		
+		// 卯酉圈曲率半径
+		double N = a/Math.sqrt(1-square_e1 * Math.pow(Math.sin(B), 2));
+		double X = (N+H) * Math.cos(B) * Math.cos(L);
+		double Y = (N+H) * Math.cos(B) * Math.sin(L);
+		double Z = (N*(1-square_e1)+H) * Math.sin(B);
+		
+		Coordinate target = new Coordinate();
+		target.setRe(source.getRe());
+		target.setCoordType(CoordinateType.SPATIAL_RECTANGULAR);
+		target.setX(X);
+		target.setY(Y);
+		target.setZ(Z);
+		
+		return target;		
 	}
 
 	/**

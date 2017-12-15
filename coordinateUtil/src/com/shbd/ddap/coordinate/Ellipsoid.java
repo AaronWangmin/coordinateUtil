@@ -13,8 +13,7 @@ public class Ellipsoid {
 	// the below parameters can be caculated on 'a' and 'f'
 	private double b; // 椭球短半轴,minor radius of ellipsoid
 	private double e1; // 椭球第一偏心率
-	private double e2; // 椭球第二偏心率
-	// private double N; // 卯酉圈曲率半径
+	private double e2; // 椭球第二偏心率	
 	private double square_el; // 椭球第一偏心率的平方
 	private double square_e2; // 椭球第二偏心率的平方
 
