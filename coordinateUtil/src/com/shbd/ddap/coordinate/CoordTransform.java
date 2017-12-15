@@ -65,7 +65,7 @@ public class CoordTransform {
 	 */ 
 	public static Coordinate ECEF2BLH(Coordinate source, ArcFormat arcFormat) {
 		Coordinate target = ECEF2BLH(source);
-		if (ArcFormat.DEGREE == arcFormat.DEGREE) {
+		if (ArcFormat.DEGREE == arcFormat) {
 			target.setX(rad2Deg(target.getX()));
 			target.setY(rad2Deg(target.getY()));
 			target.setZ(target.getZ());
