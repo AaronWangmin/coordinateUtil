@@ -75,7 +75,7 @@ public class CoordTransform {
 	}
 
 	/**
-	 * 弧度 转换 到度
+	 * 弧度 --> 到度
 	 * 
 	 * @param rad
 	 * @return
@@ -85,7 +85,7 @@ public class CoordTransform {
 	}
 
 	/**
-	 * 度 转换到 弧度
+	 * 度 --> 弧度
 	 * 
 	 * @param rad
 	 * @return
