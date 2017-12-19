@@ -1,5 +1,7 @@
 package com.shbd.ddap.coordinate;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+
 import com.shbd.ddap.coordinate.ConstantHolder.ArcFormat;
 import com.shbd.ddap.coordinate.ConstantHolder.CoordinateType;
 
@@ -12,7 +14,7 @@ public class CoordTransform {
 	 */
 	public static Coordinate ECEF2BLH(Coordinate source) {
 		Coordinate target = new Coordinate();
-		target.setRe(source.getRe());	// 设置转换前后的椭球
+		target.setRe(source.getRe());	// 设置转换后的椭球
 		target.setCoordType(CoordinateType.GEODETIC);	// 设置转换后的坐标为大地坐标(B/L/H)
 
 		double X = source.getX();
@@ -88,7 +90,8 @@ public class CoordTransform {
 		double Y = (N+H) * Math.cos(B) * Math.sin(L);
 		double Z = (N*(1-square_e1)+H) * Math.sin(B);
 		
-		Coordinate target = new Coordinate();
+		Coordinate target = null;	// ?
+		target = new Coordinate();
 		target.setRe(source.getRe());
 		target.setCoordType(CoordinateType.SPATIAL_RECTANGULAR);
 		target.setX(X);
@@ -97,6 +100,74 @@ public class CoordTransform {
 		
 		return target;		
 	}
+	
+	/**
+	 * 空间直角坐标--> 站心坐标（NEU）
+	 * @param originPoint：站心点的空间直角坐标,(XYZ)
+	 * @param targetPoint：目标点的空间直角坐标,(XYZ)
+	 * @return: NEU
+	 */
+	public static Coordinate calculateNEU(Coordinate originPoint,Coordinate targetPoint){
+		Coordinate originBLH = ECEF2BLH(originPoint);	// 站心点的经纬度坐标（弧度）
+		double B = originBLH.getX();
+		double L = originBLH.getY();		
+		
+		// 原点到目标点的基线向量
+		Array2DRowRealMatrix baselineO2T = new Array2DRowRealMatrix(new double[] {
+				targetPoint.getX()-originPoint.getX(),
+				targetPoint.getY()-originPoint.getY(),
+				targetPoint.getZ()-originPoint.getZ()});
+		
+		// 旋转矩阵
+		Array2DRowRealMatrix r = new Array2DRowRealMatrix(new double[][] {
+			{-Math.sin(B)*Math.cos(L),-Math.sin(B)*Math.sin(L),Math.cos(B)},
+			{-Math.sin(L),Math.cos(L),0},
+			{Math.cos(B)*Math.cos(L),Math.cos(B)*Math.sin(L),Math.sin(B)}
+		});
+		
+		// 目标点的站心坐标向量
+		Array2DRowRealMatrix v = r.multiply(baselineO2T);			
+		
+		Coordinate NEU = null;	// ？
+		NEU = new Coordinate(v.getEntry(0, 0),v.getEntry(1, 0),v.getEntry(2, 0));
+		
+		return NEU;
+	}
+	
+	/**
+	 * 根据空间两个点的空间直角坐标，计算目标点的方位角(弧度)
+	 * @param NEU
+	 * @return
+	 */
+	public static double calculateAzimuth(Coordinate originPoint,Coordinate targetPoint) {
+		Coordinate NEU = calculateNEU(originPoint, targetPoint);
+		return calculateAzimuth(NEU);
+	}
+	
+	/**
+	 * 根据空间两个点的空间直角坐标，计算目标点的高度角(弧度)
+	 * @param NEU
+	 * @return
+	 */
+	public static double calculateElevation(Coordinate originPoint,Coordinate targetPoint) {
+		Coordinate NEU = calculateNEU(originPoint, targetPoint);
+		return calculateElevation(NEU);
+	}
+	
+	/*
+	 *  以站心坐标为原点，计算卫星的方位角(弧度)
+	 */
+	public static double calculateAzimuth(Coordinate NEU) {
+		return Math.atan2(NEU.getY(), NEU.getX());
+	}
+	
+	/*
+	 *  以站心坐标为原点，计算卫星的高度角(弧度)
+	 */
+	public static double calculateElevation(Coordinate NEU) {
+		return Math.atan( Math.sqrt(NEU.getX()*NEU.getX() + NEU.getY()*NEU.getY())/NEU.getZ());
+	}
+	
 
 	/**
 	 * 弧度 --> 到度
