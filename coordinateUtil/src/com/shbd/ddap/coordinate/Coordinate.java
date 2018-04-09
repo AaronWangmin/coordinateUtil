@@ -9,9 +9,7 @@ public class Coordinate {
 	private double y;
 	private double z;
 
-	public Coordinate() {
-		super();
-	}
+	public Coordinate() {}
 
 	// 默认椭球：WGS84椭球,默认坐标形式：空间直角坐标
 	public Coordinate(double x, double y, double z) {

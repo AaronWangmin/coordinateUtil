@@ -1,10 +1,9 @@
 package com.shbd.ddap.coordinate;
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import com.shbd.ddap.coordinate.ConstantHolder.ArcFormat;
 import com.shbd.ddap.coordinate.ConstantHolder.CoordinateType;
-
 public class CoordTransform {
 
 	/**
@@ -102,12 +101,58 @@ public class CoordTransform {
 	}
 	
 	/**
+	 * 大地坐标--> 高斯平面坐标
+	 * @param B:	纬度
+	 * @param L:	经度
+	 * 		  L0:	中央子午线
+	 * 		  addY:	Y轴加常数
+	 * @return: x,y
+	 */
+	public static Coordinate BL2xy(Ellipsoid re,double B,double L,double L0,double addY) {
+		
+		double a = re.getA();	// 椭球长半轴
+		double e1 = re.getE1();
+		double e2 = re.getE2();
+		
+		
+		double deltaL = L - L0;	
+		double N = a/Math.sqrt(1-Math.pow(e1*Math.sin(B), 2));
+		double t = Math.tan(B);
+		double eta = e2 * Math.cos(B);
+		
+		double C1 = 1.0 + (3.0/4) * Math.pow(e1, 2) + (45.0/64) * Math.pow(e1, 4) 
+				+ (175.0/256) * Math.pow(e1, 6) + (11025.0/16384) * Math.pow(e1, 8);
+		
+		double C2 = (3.0/4) * Math.pow(e1, 2) + (15.0/16) * Math.pow(e1, 4) 
+				+ (525.0/512) * Math.pow(e1, 6) + (2205.0/2048) * Math.pow(e1, 8);		
+		
+		double C3 = (15.0/64) * Math.pow(e1, 4) + (105.0/256) * Math.pow(e1, 6) 
+				+ (2205.0/4096) * Math.pow(e1, 8);
+		
+		double C4 = (35.0/512) * Math.pow(e1, 6) + (315.0/2048) * Math.pow(e1, 8);
+		
+		double C5 = (315.0/131072) * Math.pow(e1, 8);
+		
+		double X = a * (1-e1*e1)*(C1*B - (1.0/2)*C2*Math.sin(2*B) + (1.0/4)*C3*Math.sin(4*B) 
+				- (1.0/6)*C4*Math.sin(6*B) + C5*Math.sin(8*B));
+		
+		double x = X + (1.0/2)*N* Math.sin(B) * Math.cos(B) * Math.pow(deltaL, 2) 
+				*(1 + (1.0/12) * Math.pow(deltaL*Math.cos(B),2) * (5 - t*t + 9*eta*eta + 4*Math.pow(eta, 4)) 
+						+ (1.0/360)*Math.pow(deltaL*Math.cos(B), 4)*(61-58*t*t + Math.pow(t, 4)));
+		
+		double y = addY + N*Math.cos(B)*deltaL*(1 + (1.0/6)*Math.pow(deltaL*Math.cos(B),2)*(1-t*t +eta*eta) 
+				+ (1.0/120)*Math.pow(deltaL*Math.cos(B), 4)*(5 - 18*t*t +Math.pow(t, 4) - 14*eta*eta - 58*Math.pow(eta*t, 2)));
+		
+		return new Coordinate(re,CoordinateType.GAUSS_PLAN,x,y,0);
+	}
+	
+	/**
 	 * 空间直角坐标--> 站心坐标（NEU）
 	 * @param originPoint：站心点的空间直角坐标,(XYZ)
 	 * @param targetPoint：目标点的空间直角坐标,(XYZ)
 	 * @return: NEU
 	 */
-	public static Coordinate calculateNEU(Coordinate originPoint,Coordinate targetPoint){
+	public static Coordinate ECEF2NEU(Coordinate originPoint,Coordinate targetPoint){
 		Coordinate originBLH = ECEF2BLH(originPoint);	// 站心点的经纬度坐标（弧度）
 		double B = originBLH.getX();
 		double L = originBLH.getY();		
@@ -140,7 +185,7 @@ public class CoordTransform {
 	 * @return
 	 */
 	public static double calculateAzimuth(Coordinate originPoint,Coordinate targetPoint) {
-		Coordinate NEU = calculateNEU(originPoint, targetPoint);
+		Coordinate NEU = ECEF2NEU(originPoint, targetPoint);
 		return calculateAzimuth(NEU);
 	}
 	
@@ -150,7 +195,7 @@ public class CoordTransform {
 	 * @return
 	 */
 	public static double calculateElevation(Coordinate originPoint,Coordinate targetPoint) {
-		Coordinate NEU = calculateNEU(originPoint, targetPoint);
+		Coordinate NEU = ECEF2NEU(originPoint, targetPoint);
 		return calculateElevation(NEU);
 	}
 	
@@ -165,7 +210,10 @@ public class CoordTransform {
 	 *  以站心坐标为原点，计算卫星的高度角(弧度)
 	 */
 	public static double calculateElevation(Coordinate NEU) {
-		return Math.atan( Math.sqrt(NEU.getX()*NEU.getX() + NEU.getY()*NEU.getY())/NEU.getZ());
+	//	return Math.atan( Math.sqrt(NEU.getX()*NEU.getX() + NEU.getY()*NEU.getY()));
+		
+		double a = calculateAzimuth(NEU);
+		return Math.atan(NEU.getZ()/(NEU.getX()*Math.cos(a) + NEU.getY()*Math.sin(a)));
 	}
 	
 

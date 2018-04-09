@@ -57,9 +57,14 @@ public class TestWGS84Ellipsoid {
 	
 	@Test
 	public void testBLH2ECEF() {
-		double B = CoordTransform.deg2Rad(30.874999463688056);
-		double L = CoordTransform.deg2Rad(121.816458229654);
-		double H = 42.057353113777936;
+		
+		double B = CoordTransform.deg2Rad(31+16.0/60 + 9.411132/3600);
+		double L = CoordTransform.deg2Rad(121+28.0/60 + 57.543924/3600);
+		double H = 31.537;
+		
+//		double B = CoordTransform.deg2Rad(30.874999463688056);
+//		double L = CoordTransform.deg2Rad(121.816458229654);
+//		double H = 42.057353113777936;
 		
 		Coordinate c1 = new Coordinate(B,L,H);
 		System.out.println(c1);
@@ -67,10 +72,16 @@ public class TestWGS84Ellipsoid {
 	}
 	
 	@Test
-	public void testCalculateNEU() {
-		Coordinate originPoint = new Coordinate(1,2,3);
-		Coordinate targetPoint = new Coordinate(3,2,1);
-		Coordinate NEU = CoordTransform.calculateNEU(originPoint,targetPoint);
+	public void testCalculateNEU() {		
+		Coordinate originPoint = CoordTransform.BLH2ECEF(new Coordinate(
+				CoordTransform.deg2Rad(15),
+				CoordTransform.deg2Rad(105),
+				0));
+		Coordinate targetPoint = CoordTransform.BLH2ECEF(new Coordinate(
+				CoordTransform.deg2Rad(15),
+				CoordTransform.deg2Rad(135),
+				0));
+		Coordinate NEU = CoordTransform.ECEF2NEU(originPoint,targetPoint);
 		System.out.println(NEU);
 		
 		double azimuth = CoordTransform.calculateAzimuth(NEU);

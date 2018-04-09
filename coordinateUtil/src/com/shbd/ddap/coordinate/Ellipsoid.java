@@ -15,7 +15,7 @@ public class Ellipsoid {
 	private double e1; // 椭球第一偏心率
 	private double e2; // 椭球第二偏心率	
 	private double square_el; // 椭球第一偏心率的平方
-	private double square_e2; // 椭球第二偏心率的平方
+	private double square_e2; // 椭球第二偏心率的平方	
 
 	public Ellipsoid() {
 	}
@@ -43,7 +43,7 @@ public class Ellipsoid {
 		this.square_el = (a * a - b * b) / (a * a);
 		this.square_e2 = (a * a - b * b) / (b * b);
 		this.e1 = Math.sqrt(this.square_el);
-		this.e2 = Math.sqrt(this.square_e2);
+		this.e2 = Math.sqrt(this.square_e2);		
 	}
 
 	public double getA() {
