@@ -3,6 +3,7 @@ package com.shbd.ddap.math;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
 
 public class MatrixUtil {
 	
@@ -19,5 +20,10 @@ public class MatrixUtil {
 	public static RealMatrix inverseMatrix(RealMatrix A) {
 		RealMatrix result = new LUDecomposition(A).getSolver().getInverse();		
 		return result;		
+	}
+	
+	// 将一个向量转换为矩阵
+	public static RealMatrix vector2Matrix(RealVector v) {
+		return new Array2DRowRealMatrix(v.toArray());
 	}
 }
