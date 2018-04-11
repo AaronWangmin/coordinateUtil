@@ -1,9 +1,17 @@
 package com.shbd.ddap.coordinate;
 
 
+import java.util.ArrayList;
+
+import org.apache.commons.math3.analysis.function.Inverse;
+import org.apache.commons.math3.linear.Array2DRowFieldMatrix;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealVector;
+
 import com.shbd.ddap.coordinate.ConstantHolder.ArcFormat;
 import com.shbd.ddap.coordinate.ConstantHolder.CoordinateType;
+import com.shbd.ddap.math.MatrixUtil;
 public class CoordTransform {
 
 	/**
@@ -209,6 +217,87 @@ public class CoordTransform {
 				    + Math.pow(y, 4)*(5 + 6*eta*eta + 28*t*t + 8*eta*eta*t*t + 24*Math.pow(t, 4))/(120*Math.pow(Nf, 4)));
 		
 		return new Coordinate(re,CoordinateType.GEODETIC,B,L,0);
+	}
+	
+	/**
+	 * 根据3个以上的已知XYZ点对，求取7参数
+	 * 参数平差模型： V = B x - l
+	 * @param sources
+	 * @param targets
+	 * @return
+	 */
+	public static RealVector calculateServenParam(ArrayList<Coordinate> sources,
+															ArrayList<Coordinate> targets) {
+		
+		
+		
+		// 计算常数向量：L(n*1)
+		ArrayRealVector L_delta_X = new ArrayRealVector();
+		for(int i=0;i<sources.size();i++) {
+			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getX() - sources.get(i).getX());
+			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getY() - sources.get(i).getY());
+			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getZ() - sources.get(i).getZ());			
+		}
+		
+		// 计算系数矩阵： B(n*7)
+		Array2DRowRealMatrix B = new Array2DRowRealMatrix(sources.size()*3,7);
+		ArrayRealVector B0 = new ArrayRealVector();
+		ArrayRealVector B1 = new ArrayRealVector();
+		ArrayRealVector B2 = new ArrayRealVector();
+		ArrayRealVector B3 = new ArrayRealVector();
+		ArrayRealVector B4 = new ArrayRealVector();
+		ArrayRealVector B5 = new ArrayRealVector();
+		ArrayRealVector B6 = new ArrayRealVector();
+		
+		for(int i=0;i<sources.size();i++) {
+			// 1th column
+			B0 = (ArrayRealVector)B0.append(1.0);
+			B0 = (ArrayRealVector)B0.append(0.0);
+			B0 = (ArrayRealVector)B0.append(0.0);
+			
+			// 2th column
+			B1 = (ArrayRealVector)B1.append(0.0);
+			B1 = (ArrayRealVector)B1.append(1.0);
+			B1 = (ArrayRealVector)B1.append(0.0);
+			
+			B2 = (ArrayRealVector)B2.append(0.0);
+			B2 = (ArrayRealVector)B2.append(0.0);
+			B2 = (ArrayRealVector)B2.append(1.0);
+			
+			B3 = (ArrayRealVector)B3.append(sources.get(i).getX());
+			B3 = (ArrayRealVector)B3.append(sources.get(i).getY());
+			B3 = (ArrayRealVector)B3.append(sources.get(i).getZ());
+			
+			B4 = (ArrayRealVector)B4.append(0.0);
+			B4 = (ArrayRealVector)B4.append(sources.get(i).getZ());
+			B4 = (ArrayRealVector)B4.append(-sources.get(i).getY());
+			
+			B5 = (ArrayRealVector)B5.append(-sources.get(i).getZ());
+			B5 = (ArrayRealVector)B5.append(0.0);
+			B5 = (ArrayRealVector)B5.append(sources.get(i).getX());
+			
+			// 7th column
+			B6 = (ArrayRealVector)B6.append(sources.get(i).getY());
+			B6 = (ArrayRealVector)B6.append(-sources.get(i).getX());
+			B6 = (ArrayRealVector)B6.append(0.0);
+		}
+		B.setColumnVector(0, B0);
+		B.setColumnVector(1, B1);
+		B.setColumnVector(2, B2);
+		B.setColumnVector(3, B3);
+		B.setColumnVector(4, B4);
+		B.setColumnVector(5, B5);
+		B.setColumnVector(6, B6);
+		
+		// 权矩阵 P：delta_x(7*1)，单位权，等权观测 
+		Array2DRowRealMatrix P = MatrixUtil.eye(sources.size()*3);
+		
+		// 待求7参数向量：delta_x(7*1)
+		RealVector delta_x = new ArrayRealVector(7);
+		delta_x = MatrixUtil.inverseMatrix(B.transpose().multiply(P).multiply(B))
+		.multiply(B.transpose()).multiply(P).operate(L_delta_X);
+		
+		return delta_x;
 	}
 	
 	/**
