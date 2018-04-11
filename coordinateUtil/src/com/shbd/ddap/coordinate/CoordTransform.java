@@ -12,6 +12,7 @@ import org.apache.commons.math3.linear.RealVector;
 import com.shbd.ddap.coordinate.ConstantHolder.ArcFormat;
 import com.shbd.ddap.coordinate.ConstantHolder.CoordinateType;
 import com.shbd.ddap.math.MatrixUtil;
+import com.shbd.ddap.survey.ParamAdjust;
 public class CoordTransform {
 
 	/**
@@ -226,7 +227,7 @@ public class CoordTransform {
 	 * @param targets
 	 * @return
 	 */
-	public static RealVector calculateServenParam(ArrayList<Coordinate> sources,
+	public static ParamAdjust calculateServenParam(ArrayList<Coordinate> sources,
 															ArrayList<Coordinate> targets) {
 		
 		
@@ -292,12 +293,7 @@ public class CoordTransform {
 		// 权矩阵 P：delta_x(7*1)，单位权，等权观测 
 		Array2DRowRealMatrix P = MatrixUtil.eye(sources.size()*3);
 		
-		// 待求7参数向量：delta_x(7*1)
-		RealVector delta_x = new ArrayRealVector(7);
-		delta_x = MatrixUtil.inverseMatrix(B.transpose().multiply(P).multiply(B))
-		.multiply(B.transpose()).multiply(P).operate(L_delta_X);
-		
-		return delta_x;
+		return new ParamAdjust(B, P, L_delta_X);
 	}
 	
 	/**
