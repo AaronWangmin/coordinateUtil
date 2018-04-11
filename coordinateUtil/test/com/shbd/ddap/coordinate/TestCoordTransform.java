@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
 
+import com.shbd.ddap.survey.ParamAdjust;
+
 public class TestCoordTransform {
 
 	@Test
@@ -66,9 +68,8 @@ public class TestCoordTransform {
 		targets.add(target2);
 		targets.add(target3);
 		
-		RealVector result = CoordTransform.calculateServenParam(sources, targets);
-		System.out.println(result.toString());
-		
+		ParamAdjust pa = CoordTransform.calculateServenParam(sources, targets);
+		pa.showAdjustResult();
 		
 	}
 
