@@ -1,11 +1,13 @@
-package com.shbd.ddap.coordinate;
+package com.aaron.survey.coordinate;
 
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.junit.Test;
 
-import com.shbd.ddap.coordinate.ConstantHolder.ArcFormat;
-import com.shbd.ddap.coordinate.ConstantHolder.CoordinateType;
+import com.aaron.survey.ConstantHolder.ArcFormat;
+import com.aaron.survey.ConstantHolder.CoordinateType;
+import com.aaron.survey.coordinate.CoordTransform;
+import com.aaron.survey.coordinate.Coordinate;
 
 public class TestWGS84Ellipsoid {
 	
