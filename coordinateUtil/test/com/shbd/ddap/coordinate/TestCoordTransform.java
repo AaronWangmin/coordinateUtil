@@ -2,9 +2,12 @@ package com.shbd.ddap.coordinate;
 
 import java.util.ArrayList;
 
+import org.apache.commons.math3.analysis.function.Abs;
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.junit.Test;
 
+import com.shbd.ddap.math.MatrixUtil;
 import com.shbd.ddap.survey.ParamAdjust;
 
 public class TestCoordTransform {
@@ -51,26 +54,47 @@ public class TestCoordTransform {
 	@Test
 	public void testCalculateServenParam() {
 		
-		
 		ArrayList<Coordinate> sources = new ArrayList<Coordinate>();
-		Coordinate source1 = new Coordinate(-2858951.7086, 4660391.5147, 3273543.0373);
-		Coordinate source2 = new Coordinate(-2888608.4197, 4655861.6904, 3254028.1766);
-		Coordinate source3 = new Coordinate(-2849958.9961, 4688645.1877, 3241078.5745);
+		Coordinate source1 = new Coordinate(-2085738.7757, 5503702.8697, 2892977.6829);
+		Coordinate source2 = new Coordinate(-2071267.5135, 5520926.7235, 2883341.8135);
+		Coordinate source4 = new Coordinate(-2093693.1744, 5511218.2651, 2869861.8947);
+		Coordinate source5 = new Coordinate(-2113681.5062, 5491864.0382, 2896934.4852);
 		sources.add(source1);
 		sources.add(source2);
-		sources.add(source3);
+		sources.add(source4);
+		sources.add(source5);
 		
 		ArrayList<Coordinate> targets = new ArrayList<Coordinate>();
-		Coordinate target1 = new Coordinate(-17199.2926, 5744.6724, 0);
-		Coordinate target2 = new Coordinate(-39909.6566, 33405.4226, 0);
-		Coordinate target3 = new Coordinate(-55021.4263, -16673.3169, 0);
+		Coordinate target1 = new Coordinate(-2085635.1879, 5503757.4154, 2892982.0896);
+		Coordinate target2 = new Coordinate(-2071164.1636, 5520981.4653, 2883346.1670);
+		Coordinate target4 = new Coordinate(-2093589.3723, 5511272.3144, 2869866.0221);
+		Coordinate target5 = new Coordinate(-2113577.7476, 5491917.9895, 2896938.5457);
 		targets.add(target1);
 		targets.add(target2);
-		targets.add(target3);
+		targets.add(target4);
+		targets.add(target5);
 		
 		ParamAdjust pa = CoordTransform.calculateServenParam(sources, targets);
-		pa.showAdjustResult();
 		
+		// 获取程序计算所得7参数
+		RealVector X = pa.calculateX();
+		
+		// 将三个旋转参数的单位设置为：秒		
+		X.setSubVector(4, 
+				new ArrayRealVector(new double[] {CoordTransform.rad2As(X.getEntry(4)),
+												  CoordTransform.rad2As(X.getEntry(5)),
+												  CoordTransform.rad2As(X.getEntry(6)),}));
+		// 7参数的对比值（已知值）
+		ArrayRealVector ref_X= new ArrayRealVector(
+				new double[] {280.083679038385,57.495009802255,116.647652203164,
+							  0.6304723858*Math.pow(10, -6),
+							  2.938211271759,3.529785370116,-4.710281764406});	// 秒
+		// 若最大值小于 0.001，则成功
+		RealVector diff = (X.add(ref_X.mapMultiplyToSelf(-1))).map(new Abs());
+		assert (diff.getMaxValue() < Math.pow(10, -3));
+		
+		System.out.println("diff----------------");
+		System.out.println(diff.toString());
+		pa.showAdjustResult();
 	}
-
 }
