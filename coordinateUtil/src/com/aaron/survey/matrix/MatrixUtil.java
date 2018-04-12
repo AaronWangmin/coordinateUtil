@@ -1,4 +1,4 @@
-package com.shbd.ddap.math;
+package com.aaron.survey.matrix;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.LUDecomposition;

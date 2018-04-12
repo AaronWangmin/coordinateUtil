@@ -1,19 +1,17 @@
-package com.shbd.ddap.coordinate;
+package com.aaron.survey.coordinate;
 
 
 import java.util.ArrayList;
 
-import org.apache.commons.math3.analysis.function.Inverse;
-import org.apache.commons.math3.linear.Array2DRowFieldMatrix;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.RealVector;
 
-import com.shbd.ddap.coordinate.ConstantHolder.ArcFormat;
-import com.shbd.ddap.coordinate.ConstantHolder.CoordinateType;
-import com.shbd.ddap.math.MatrixUtil;
-import com.shbd.ddap.survey.ParamAdjust;
-public class CoordTransform {
+import com.aaron.survey.ConstantHolder.ArcFormat;
+import com.aaron.survey.ConstantHolder.CoordinateType;
+import com.aaron.survey.adjust.ParamAdjust;
+import com.aaron.survey.angle.AngleUtil;
+import com.aaron.survey.matrix.MatrixUtil;
+public class CoordinateUtil {
 
 	/**
 	 *  同一参考椭球下，空间直角坐标--> 大地坐标
@@ -48,7 +46,7 @@ public class CoordTransform {
 			double B1 = Math.atan(Z / (Math.sqrt(X * X + Y * Y) * (1 - e * e * N1 / (N1 + H1))));
 
 			// 满足下列条件时，退出迭代。当B(i)-B(i-1)<=0.00001秒， H(i)-H(i-1)<=0.001米时
-			if (((B1 - B0) <= as2Rad(0.00001)) && ((H1 - H0) <= 0.001)) {
+			if (((B1 - B0) <= AngleUtil.as2Rad(0.00001)) && ((H1 - H0) <= 0.001)) {
 				double B = B1;
 				double H = H1;
 				target.setY(B);
@@ -71,8 +69,8 @@ public class CoordTransform {
 	public static Coordinate ECEF2BLH(Coordinate source, ArcFormat arcFormat) {
 		Coordinate target = ECEF2BLH(source);
 		if (ArcFormat.DEGREE == arcFormat) {
-			target.setX(rad2Deg(target.getX()));
-			target.setY(rad2Deg(target.getY()));
+			target.setX(AngleUtil.rad2Deg(target.getX()));
+			target.setY(AngleUtil.rad2Deg(target.getY()));
 			target.setZ(target.getZ());
 		}
 
@@ -195,7 +193,7 @@ public class CoordTransform {
 												  - (1.0/4)*C3*Math.sin(4*Bf0)
 				                                  + (1.0/6)*C4*Math.sin(6*Bf0)
 				                                  - (1.0/8)*C5*Math.sin(8*Bf0));
-			if(Math.abs(Bf1-Bf0) < CoordTransform.as2Rad(0.0001)) break;  // less than 0.0001 second.
+			if(Math.abs(Bf1-Bf0) < AngleUtil.as2Rad(0.0001)) break;  // less than 0.0001 second.
 			else{
 				Bf0 = Bf1;
 			}
@@ -367,33 +365,42 @@ public class CoordTransform {
 	}
 	
 
-	/**
-	 * 弧度 --> 到度
-	 * 
-	 * @param rad
-	 * @return
-	 */
-	public static double rad2Deg(double rad) {
-		return (180 / Math.PI) * rad;
-	}
-
-	/**
-	 * 度 --> 弧度
-	 * 
-	 * @param rad
-	 * @return
-	 */
-	public static double deg2Rad(double deg) {
-		return (Math.PI / 180) * deg;
-	}
-
-	/**
-	 * 秒 转换为 弧度,arc second to rad
-	 * 
-	 * @return
-	 */
-	public static double as2Rad(double as) {
-		return deg2Rad(as / 3600);
-	}
+//	/**
+//	 * 弧度 --> 到度
+//	 * 
+//	 * @param rad
+//	 * @return
+//	 */
+//	public static double rad2Deg(double rad) {
+//		return (180 / Math.PI) * rad;
+//	}
+//
+//	/**
+//	 * 度 --> 弧度
+//	 * 
+//	 * @param rad
+//	 * @return
+//	 */
+//	public static double deg2Rad(double deg) {
+//		return (Math.PI / 180) * deg;
+//	}
+//
+//	/**
+//	 * 秒 转换为 弧度,arc second to rad
+//	 * 
+//	 * @return
+//	 */
+//	public static double as2Rad(double as) {
+//		return deg2Rad(as / 3600);
+//	}
+//	
+//	/**
+//	 * 弧度 转换为秒 , rad to arc second
+//	 * 
+//	 * @return
+//	 */
+//	public static double rad2As(double rad) {
+//		return rad2Deg(rad) * 3600;
+//	}
 
 }

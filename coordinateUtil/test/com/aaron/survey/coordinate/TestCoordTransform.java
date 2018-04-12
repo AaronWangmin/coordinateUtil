@@ -9,7 +9,8 @@ import org.junit.Test;
 
 import com.aaron.survey.ConstantHolder;
 import com.aaron.survey.adjust.ParamAdjust;
-import com.aaron.survey.coordinate.CoordTransform;
+import com.aaron.survey.angle.AngleUtil;
+import com.aaron.survey.coordinate.CoordinateUtil;
 import com.aaron.survey.coordinate.Coordinate;
 import com.aaron.survey.coordinate.Ellipsoid;
 import com.aaron.survey.matrix.MatrixUtil;
@@ -20,12 +21,12 @@ public class TestCoordTransform {
 	public void testBL2xy() {
 		
 		Ellipsoid re = ConstantHolder.ReferenceEllipsoid.BJ54;
-		double B = CoordTransform.deg2Rad(30.8692658056);
-		double L = CoordTransform.deg2Rad(121.8836248944);
-		double L0 = CoordTransform.deg2Rad(120);
+		double B = AngleUtil.deg2Rad(30.8692658056);
+		double L = AngleUtil.deg2Rad(121.8836248944);
+		double L0 = AngleUtil.deg2Rad(120);
 		double yAdd = 500000;
 		
-		Coordinate result = CoordTransform.BL2xy(re, B, L, L0,yAdd);
+		Coordinate result = CoordinateUtil.BL2xy(re, B, L, L0,yAdd);
 		
 		assert (result.getX()-3418060.509 <= 0.05) && (result.getY()-680157.668 <= 0.05);
 		
@@ -40,15 +41,15 @@ public class TestCoordTransform {
 		Ellipsoid re = ConstantHolder.ReferenceEllipsoid.BJ54;
 		double x = 3418060.509;
 		double y = 680157.668;
-		double L0 = CoordTransform.deg2Rad(120);
+		double L0 = AngleUtil.deg2Rad(120);
 		double yAdd = 500000;
 		
-		Coordinate result = CoordTransform.xy2BL(re, x, y, L0, yAdd);
+		Coordinate result = CoordinateUtil.xy2BL(re, x, y, L0, yAdd);
 		
-		double degB = CoordTransform.rad2Deg(result.getX());
-		double degL = CoordTransform.rad2Deg(result.getY());
+		double degB = AngleUtil.rad2Deg(result.getX());
+		double degL = AngleUtil.rad2Deg(result.getY());
 		
-		assert (degB-30.8692658056 <= CoordTransform.as2Rad(0.0001)) && (degL-121.8836248944 <= CoordTransform.as2Rad(0.0001));
+		assert (degB-30.8692658056 <= AngleUtil.as2Rad(0.0001)) && (degL-121.8836248944 <= AngleUtil.as2Rad(0.0001));
 		
 		System.out.println(degB + " , " + degL);
 		System.out.println(result);
@@ -78,16 +79,16 @@ public class TestCoordTransform {
 		targets.add(target4);
 		targets.add(target5);
 		
-		ParamAdjust pa = CoordTransform.calculateServenParam(sources, targets);
+		ParamAdjust pa = CoordinateUtil.calculateServenParam(sources, targets);
 		
 		// 获取程序计算所得7参数
 		RealVector X = pa.calculateX();
 		
 		// 将三个旋转参数的单位设置为：秒		
 		X.setSubVector(4, 
-				new ArrayRealVector(new double[] {CoordTransform.rad2As(X.getEntry(4)),
-												  CoordTransform.rad2As(X.getEntry(5)),
-												  CoordTransform.rad2As(X.getEntry(6)),}));
+				new ArrayRealVector(new double[] {AngleUtil.rad2As(X.getEntry(4)),
+												  AngleUtil.rad2As(X.getEntry(5)),
+												  AngleUtil.rad2As(X.getEntry(6)),}));
 		// 7参数的对比值（已知值）
 		ArrayRealVector ref_X= new ArrayRealVector(
 				new double[] {280.083679038385,57.495009802255,116.647652203164,

@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import com.aaron.survey.ConstantHolder.ArcFormat;
 import com.aaron.survey.ConstantHolder.CoordinateType;
-import com.aaron.survey.coordinate.CoordTransform;
+import com.aaron.survey.coordinate.CoordinateUtil;
 import com.aaron.survey.coordinate.Coordinate;
 
 public class TestWGS84Ellipsoid {
@@ -43,7 +43,7 @@ public class TestWGS84Ellipsoid {
 		double Y = 4655861.6904;
 		double theta = Math.atan2(Y, X);
 		
-		System.out.println(CoordTransform.rad2Deg(theta));
+		System.out.println(CoordinateUtil.rad2Deg(theta));
 	}
 
 	@Test
@@ -51,17 +51,17 @@ public class TestWGS84Ellipsoid {
 		
 		Coordinate c1 = new Coordinate(-2888608.4197,4655861.6904,3254028.1766);
 		System.out.println(c1);
-		System.out.println(CoordTransform.ECEF2BLH(c1));		
+		System.out.println(CoordinateUtil.ECEF2BLH(c1));		
 		
-		System.out.println(CoordTransform.ECEF2BLH(c1,ArcFormat.DEGREE));
+		System.out.println(CoordinateUtil.ECEF2BLH(c1,ArcFormat.DEGREE));
 		
 	}
 	
 	@Test
 	public void testBLH2ECEF() {
 		
-		double B = CoordTransform.deg2Rad(31+16.0/60 + 9.411132/3600);
-		double L = CoordTransform.deg2Rad(121+28.0/60 + 57.543924/3600);
+		double B = CoordinateUtil.deg2Rad(31+16.0/60 + 9.411132/3600);
+		double L = CoordinateUtil.deg2Rad(121+28.0/60 + 57.543924/3600);
 		double H = 31.537;
 		
 //		double B = CoordTransform.deg2Rad(30.874999463688056);
@@ -70,28 +70,28 @@ public class TestWGS84Ellipsoid {
 		
 		Coordinate c1 = new Coordinate(B,L,H);
 		System.out.println(c1);
-		System.out.println(CoordTransform.BLH2ECEF(c1));		
+		System.out.println(CoordinateUtil.BLH2ECEF(c1));		
 	}
 	
 	@Test
 	public void testCalculateNEU() {		
-		Coordinate originPoint = CoordTransform.BLH2ECEF(new Coordinate(
-				CoordTransform.deg2Rad(15),
-				CoordTransform.deg2Rad(105),
+		Coordinate originPoint = CoordinateUtil.BLH2ECEF(new Coordinate(
+				CoordinateUtil.deg2Rad(15),
+				CoordinateUtil.deg2Rad(105),
 				0));
-		Coordinate targetPoint = CoordTransform.BLH2ECEF(new Coordinate(
-				CoordTransform.deg2Rad(15),
-				CoordTransform.deg2Rad(135),
+		Coordinate targetPoint = CoordinateUtil.BLH2ECEF(new Coordinate(
+				CoordinateUtil.deg2Rad(15),
+				CoordinateUtil.deg2Rad(135),
 				0));
-		Coordinate NEU = CoordTransform.ECEF2NEU(originPoint,targetPoint);
+		Coordinate NEU = CoordinateUtil.ECEF2NEU(originPoint,targetPoint);
 		System.out.println(NEU);
 		
-		double azimuth = CoordTransform.calculateAzimuth(NEU);
-		double elevation = CoordTransform.calculateElevation(NEU);
+		double azimuth = CoordinateUtil.calculateAzimuth(NEU);
+		double elevation = CoordinateUtil.calculateElevation(NEU);
 		
-		System.out.println(CoordTransform.rad2Deg(azimuth));
+		System.out.println(CoordinateUtil.rad2Deg(azimuth));
 		
-		System.out.println(CoordTransform.rad2Deg(elevation));
+		System.out.println(CoordinateUtil.rad2Deg(elevation));
 		
 	}
 	

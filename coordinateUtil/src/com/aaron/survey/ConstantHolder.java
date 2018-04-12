@@ -1,8 +1,15 @@
-package com.shbd.ddap.coordinate;
+package com.aaron.survey;
+
+import com.aaron.survey.coordinate.Ellipsoid;
 
 public final class ConstantHolder {
 	
 	private ConstantHolder() {}
+	
+	// 角度格式：弧度、度、度/分/秒
+	public enum ArcFormat{
+		RAD,DEGREE,DMS,SECOND
+	}
 	
 	// 参考椭球类型：
 	public enum ReferenceEllipsoidType{
@@ -17,11 +24,6 @@ public final class ConstantHolder {
 	// 坐标类型：空间直角坐标、大地坐标、高斯平面坐标
 	public enum CoordinateType{
 		SPATIAL_RECTANGULAR,GEODETIC,GAUSS_PLAN
-	}
-	
-	// 角度格式：弧度、度、度/分/秒
-	public enum ArcFormat{
-		RAD,DEGREE,DMS
 	}
 	
 	// 参考椭球

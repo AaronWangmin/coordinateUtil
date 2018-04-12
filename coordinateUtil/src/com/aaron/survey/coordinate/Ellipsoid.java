@@ -1,6 +1,6 @@
-package com.shbd.ddap.coordinate;
+package com.aaron.survey.coordinate;
 
-import com.shbd.ddap.coordinate.ConstantHolder.ReferenceEllipsoidType;
+import com.aaron.survey.ConstantHolder.ReferenceEllipsoidType;
 
 public class Ellipsoid {
 	private ReferenceEllipsoidType type;

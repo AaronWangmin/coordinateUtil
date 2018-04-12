@@ -1,6 +1,7 @@
-package com.shbd.ddap.coordinate;
+package com.aaron.survey.coordinate;
 
-import com.shbd.ddap.coordinate.ConstantHolder.CoordinateType;
+import com.aaron.survey.ConstantHolder;
+import com.aaron.survey.ConstantHolder.CoordinateType;
 
 public class Coordinate {
 	private Ellipsoid re;

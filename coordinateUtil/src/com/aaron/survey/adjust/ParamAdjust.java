@@ -1,11 +1,11 @@
-package com.aaron.survey;
+package com.aaron.survey.adjust;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
-import com.shbd.ddap.math.MatrixUtil;
+import com.aaron.survey.matrix.MatrixUtil;
 
 /**
  *  参数平差 
