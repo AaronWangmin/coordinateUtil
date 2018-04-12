@@ -1,4 +1,4 @@
-package com.shbd.ddap.survey;
+package com.aaron.survey;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -111,7 +111,5 @@ public class ParamAdjust {
 	public void setL(ArrayRealVector l) {
 		L = l;
 	}
-
-	
 
 }
