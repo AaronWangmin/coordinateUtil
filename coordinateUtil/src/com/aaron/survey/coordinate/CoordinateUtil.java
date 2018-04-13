@@ -314,7 +314,7 @@ public class CoordinateUtil {
 		Array2DRowRealMatrix B = new Array2DRowRealMatrix(sources.size()*3,7);
 		int n = 0;	// 系数矩阵的行号
 		for(int i=0; i<sources.size();i++) {
-			Array2DRowRealMatrix Bi = CalculaterotationMatrixByBursa(sources.get(i));
+			Array2DRowRealMatrix Bi = calculateRotationMatrixOfBursa(sources.get(i));
 			for(int j=0;j<3;j++) {
 				B.setRowVector(n, Bi.getRowVector(j));
 				n++;
@@ -338,12 +338,9 @@ public class CoordinateUtil {
 		Xs.setEntry(0, source.getX());
 		Xs.setEntry(1, source.getY());
 		Xs.setEntry(2, source.getZ());
-//		Xs = (ArrayRealVector)Xs.append(source.getX());
-//		Xs = (ArrayRealVector)Xs.append(source.getY());
-//		Xs = (ArrayRealVector)Xs.append(source.getZ());	
 		
 		// 提取旋转矩阵：R(3*7)
-		Array2DRowRealMatrix R = CalculaterotationMatrixByBursa(source);
+		Array2DRowRealMatrix R = calculateRotationMatrixOfBursa(source);
 		
 		// 转换后的坐标向量
 		RealVector Xt = (R.multiply(MatrixUtil.vector2Matrix(servenParam)).add(MatrixUtil.vector2Matrix(Xs)))
@@ -356,60 +353,118 @@ public class CoordinateUtil {
 	}
 	
 	/**
-	 * 通过源坐标点，提取旋转矩阵
+	 * 通过源坐标点，计算7参数矩阵
 	 * 
 	 * @param source：	XYZ
 	 * 
 	 * @return:	Array2DRowRealMatrix(3,7)
 	 */
-	private static Array2DRowRealMatrix CalculaterotationMatrixByBursa(Coordinate source) {
+	private static Array2DRowRealMatrix calculateRotationMatrixOfBursa(Coordinate source) {
+		Array2DRowRealMatrix R = new Array2DRowRealMatrix(3,7);
 		
-		ArrayRealVector B0 = new ArrayRealVector();		// 1th column
-		ArrayRealVector B1 = new ArrayRealVector();		// 2th column
-		ArrayRealVector B2 = new ArrayRealVector();		// 3th column
-		ArrayRealVector B3 = new ArrayRealVector();		// 4th column
-		ArrayRealVector B4 = new ArrayRealVector();		// 5th column
-		ArrayRealVector B5 = new ArrayRealVector();		// 6th column
-		ArrayRealVector B6 = new ArrayRealVector();		// 7th column
+		// 第  1~3 列, 3*3 单位矩阵
+		R.setEntry(0, 0, 1.0);
+		R.setEntry(1, 0, 0.0);
+		R.setEntry(2, 0, 0.0);		
 		
-		B0 = (ArrayRealVector)B0.append(1.0);
-		B0 = (ArrayRealVector)B0.append(0.0);
-		B0 = (ArrayRealVector)B0.append(0.0);
+		R.setEntry(0, 1, 0.0);
+		R.setEntry(1, 1, 1.0);
+		R.setEntry(2, 1, 0.0);
 		
-		B1 = (ArrayRealVector)B1.append(0.0);
-		B1 = (ArrayRealVector)B1.append(1.0);
-		B1 = (ArrayRealVector)B1.append(0.0);
+		R.setEntry(0, 2, 0.0);
+		R.setEntry(1, 2, 0.0);
+		R.setEntry(2, 2, 1.0);
 		
-		B2 = (ArrayRealVector)B2.append(0.0);
-		B2 = (ArrayRealVector)B2.append(0.0);
-		B2 = (ArrayRealVector)B2.append(1.0);
+		// 第 4 列
+		R.setEntry(0, 3, source.getX());
+		R.setEntry(1, 3, source.getY());
+		R.setEntry(2, 3, source.getZ());
 		
-		B3 = (ArrayRealVector)B3.append(source.getX());
-		B3 = (ArrayRealVector)B3.append(source.getY());
-		B3 = (ArrayRealVector)B3.append(source.getZ());
+		// 第 5 列
+		R.setEntry(0, 4, 0.0);
+		R.setEntry(1, 4, source.getZ());
+		R.setEntry(2, 4, -source.getY());
 		
-		B4 = (ArrayRealVector)B4.append(0.0);
-		B4 = (ArrayRealVector)B4.append(source.getZ());
-		B4 = (ArrayRealVector)B4.append(-source.getY());
+		// 第 6 列
+		R.setEntry(0, 5, -source.getZ());
+		R.setEntry(1, 5, 0.0);
+		R.setEntry(2, 5, source.getX());
 		
-		B5 = (ArrayRealVector)B5.append(-source.getZ());
-		B5 = (ArrayRealVector)B5.append(0.0);
-		B5 = (ArrayRealVector)B5.append(source.getX());
-		
-		B6 = (ArrayRealVector)B6.append(source.getY());
-		B6 = (ArrayRealVector)B6.append(-source.getX());
-		B6 = (ArrayRealVector)B6.append(0.0);
-		
-		Array2DRowRealMatrix B = new Array2DRowRealMatrix(3,7);
-		B.setColumnVector(0, B0);
-		B.setColumnVector(1, B1);
-		B.setColumnVector(2, B2);
-		B.setColumnVector(3, B3);
-		B.setColumnVector(4, B4);
-		B.setColumnVector(5, B5);
-		B.setColumnVector(6, B6);
+		// 第七列
+		R.setEntry(0, 6, source.getY());
+		R.setEntry(1, 6, -source.getX());
+		R.setEntry(2, 6, 0.0);
 
-		return B;
+		return R;
+	}
+	
+	/**
+	 * 根据2个以上的已知平面坐标 x/y 点对，求取4参数
+	 * 参数平差模型： V = B x - l
+	 * @param sources
+	 * @param targets
+	 * @return
+	 */
+	public static ParamAdjust calculateFourParam(ArrayList<Coordinate> sources,
+															ArrayList<Coordinate> targets) {
+		
+		// 计算常数向量：L(n*1)
+		ArrayRealVector L_delta_X = new ArrayRealVector();
+		for(int i=0;i<sources.size();i++) {
+			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getX() - sources.get(i).getX());
+			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getY() - sources.get(i).getY());
+		}
+		
+		// 计算系数矩阵(旋转矩阵)： B(n*4)
+		Array2DRowRealMatrix B = new Array2DRowRealMatrix(sources.size()*2,4);
+		int n = 0;	// 系数矩阵的行号
+		for(int i=0; i<sources.size();i++) {
+			Array2DRowRealMatrix Bi = calculateRotationMatrixOfFourParam(sources.get(i));
+			for(int j=0;j<2;j++) {
+				B.setRowVector(n, Bi.getRowVector(j));
+				n++;
+			}
+		}
+		
+//		System.out.println("B------------------------------");
+//		System.out.println(B.toString());
+		
+		// 权矩阵 P：delta_x(7*1)，单位权，等权观测 
+		Array2DRowRealMatrix P = MatrixUtil.eye(sources.size()*2);
+		
+		return new ParamAdjust(B, P, L_delta_X);
+	}
+	
+	/**
+	 * 通过源坐标点，计算4参数的旋转矩阵
+	 * 
+	 * @param source：	XYZ
+	 * 
+	 * @return:	Array2DRowRealMatrix(3,7)
+	 */
+	private static Array2DRowRealMatrix calculateRotationMatrixOfFourParam(Coordinate source) {
+		
+		Array2DRowRealMatrix R = new Array2DRowRealMatrix(2,4);
+		
+		// 第 1~2 列,2*2 单位矩阵
+		R.setEntry(0, 0, 1);
+		R.setEntry(1, 0, 0);
+		R.setEntry(0, 1, 0);
+		R.setEntry(1, 1, 1);
+				
+		// 第 3  列
+		R.setEntry(0, 2, source.getX());
+		R.setEntry(1, 2, source.getY());
+		
+		// 第 4  列
+		R.setEntry(0, 3, -source.getY());
+		R.setEntry(1, 3,  source.getX());
+		
+//		System.out.println(R.getRowDimension());
+//		System.out.println(R.getColumnDimension());
+//		System.out.println(R.toString());
+		
+		return R;
 	}
 	
 
