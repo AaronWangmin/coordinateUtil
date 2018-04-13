@@ -5,7 +5,9 @@ import java.util.ArrayList;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealVector;
 
+import com.aaron.survey.ConstantHolder;
 import com.aaron.survey.ConstantHolder.ArcFormat;
 import com.aaron.survey.ConstantHolder.CoordinateType;
 import com.aaron.survey.adjust.ParamAdjust;
@@ -218,81 +220,7 @@ public class CoordinateUtil {
 		return new Coordinate(re,CoordinateType.GEODETIC,B,L,0);
 	}
 	
-	/**
-	 * 根据3个以上的已知XYZ点对，求取7参数
-	 * 参数平差模型： V = B x - l
-	 * @param sources
-	 * @param targets
-	 * @return
-	 */
-	public static ParamAdjust calculateServenParam(ArrayList<Coordinate> sources,
-															ArrayList<Coordinate> targets) {
-		
-		
-		
-		// 计算常数向量：L(n*1)
-		ArrayRealVector L_delta_X = new ArrayRealVector();
-		for(int i=0;i<sources.size();i++) {
-			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getX() - sources.get(i).getX());
-			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getY() - sources.get(i).getY());
-			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getZ() - sources.get(i).getZ());			
-		}
-		
-		// 计算系数矩阵： B(n*7)
-		Array2DRowRealMatrix B = new Array2DRowRealMatrix(sources.size()*3,7);
-		ArrayRealVector B0 = new ArrayRealVector();
-		ArrayRealVector B1 = new ArrayRealVector();
-		ArrayRealVector B2 = new ArrayRealVector();
-		ArrayRealVector B3 = new ArrayRealVector();
-		ArrayRealVector B4 = new ArrayRealVector();
-		ArrayRealVector B5 = new ArrayRealVector();
-		ArrayRealVector B6 = new ArrayRealVector();
-		
-		for(int i=0;i<sources.size();i++) {
-			// 1th column
-			B0 = (ArrayRealVector)B0.append(1.0);
-			B0 = (ArrayRealVector)B0.append(0.0);
-			B0 = (ArrayRealVector)B0.append(0.0);
-			
-			// 2th column
-			B1 = (ArrayRealVector)B1.append(0.0);
-			B1 = (ArrayRealVector)B1.append(1.0);
-			B1 = (ArrayRealVector)B1.append(0.0);
-			
-			B2 = (ArrayRealVector)B2.append(0.0);
-			B2 = (ArrayRealVector)B2.append(0.0);
-			B2 = (ArrayRealVector)B2.append(1.0);
-			
-			B3 = (ArrayRealVector)B3.append(sources.get(i).getX());
-			B3 = (ArrayRealVector)B3.append(sources.get(i).getY());
-			B3 = (ArrayRealVector)B3.append(sources.get(i).getZ());
-			
-			B4 = (ArrayRealVector)B4.append(0.0);
-			B4 = (ArrayRealVector)B4.append(sources.get(i).getZ());
-			B4 = (ArrayRealVector)B4.append(-sources.get(i).getY());
-			
-			B5 = (ArrayRealVector)B5.append(-sources.get(i).getZ());
-			B5 = (ArrayRealVector)B5.append(0.0);
-			B5 = (ArrayRealVector)B5.append(sources.get(i).getX());
-			
-			// 7th column
-			B6 = (ArrayRealVector)B6.append(sources.get(i).getY());
-			B6 = (ArrayRealVector)B6.append(-sources.get(i).getX());
-			B6 = (ArrayRealVector)B6.append(0.0);
-		}
-		B.setColumnVector(0, B0);
-		B.setColumnVector(1, B1);
-		B.setColumnVector(2, B2);
-		B.setColumnVector(3, B3);
-		B.setColumnVector(4, B4);
-		B.setColumnVector(5, B5);
-		B.setColumnVector(6, B6);
-		
-		// 权矩阵 P：delta_x(7*1)，单位权，等权观测 
-		Array2DRowRealMatrix P = MatrixUtil.eye(sources.size()*3);
-		
-		return new ParamAdjust(B, P, L_delta_X);
-	}
+	
 	
 	/**
 	 * 空间直角坐标--> 站心坐标（NEU）
@@ -364,43 +292,127 @@ public class CoordinateUtil {
 		return Math.atan(NEU.getZ()/(NEU.getX()*Math.cos(a) + NEU.getY()*Math.sin(a)));
 	}
 	
+	/**
+	 * 根据3个以上的已知XYZ点对，求取7参数
+	 * 参数平差模型： V = B x - l
+	 * @param sources
+	 * @param targets
+	 * @return
+	 */
+	public static ParamAdjust calculateServenParam(ArrayList<Coordinate> sources,
+															ArrayList<Coordinate> targets) {
+		
+		// 计算常数向量：L(n*1)
+		ArrayRealVector L_delta_X = new ArrayRealVector();
+		for(int i=0;i<sources.size();i++) {
+			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getX() - sources.get(i).getX());
+			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getY() - sources.get(i).getY());
+			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getZ() - sources.get(i).getZ());			
+		}
+		
+		// 计算系数矩阵(旋转矩阵)： B(n*7)
+		Array2DRowRealMatrix B = new Array2DRowRealMatrix(sources.size()*3,7);
+		int n = 0;	// 系数矩阵的行号
+		for(int i=0; i<sources.size();i++) {
+			Array2DRowRealMatrix Bi = CalculaterotationMatrixByBursa(sources.get(i));
+			for(int j=0;j<3;j++) {
+				B.setRowVector(n, Bi.getRowVector(j));
+				n++;
+			}
+		}
+		
+//		System.out.println("B------------------------------");
+//		System.out.println(B.toString());
+		
+		// 权矩阵 P：delta_x(7*1)，单位权，等权观测 
+		Array2DRowRealMatrix P = MatrixUtil.eye(sources.size()*3);
+		
+		return new ParamAdjust(B, P, L_delta_X);
+	}
+	
+	
+	public static Coordinate ECEF2ECEFByServenParam(Coordinate source,ArrayRealVector servenParam,Ellipsoid ellipsoid) {
+		
+		// 提取原坐标向量：Xs(3*1)
+		ArrayRealVector Xs = new ArrayRealVector(3);
+		Xs.setEntry(0, source.getX());
+		Xs.setEntry(1, source.getY());
+		Xs.setEntry(2, source.getZ());
+//		Xs = (ArrayRealVector)Xs.append(source.getX());
+//		Xs = (ArrayRealVector)Xs.append(source.getY());
+//		Xs = (ArrayRealVector)Xs.append(source.getZ());	
+		
+		// 提取旋转矩阵：R(3*7)
+		Array2DRowRealMatrix R = CalculaterotationMatrixByBursa(source);
+		
+		// 转换后的坐标向量
+		RealVector Xt = (R.multiply(MatrixUtil.vector2Matrix(servenParam)).add(MatrixUtil.vector2Matrix(Xs)))
+				.getColumnVector(0);
+		
+		return new Coordinate(ellipsoid,CoordinateType.SPATIAL_RECTANGULAR,
+				Xt.getEntry(0),
+				Xt.getEntry(1),
+				Xt.getEntry(2));
+	}
+	
+	/**
+	 * 通过源坐标点，提取旋转矩阵
+	 * 
+	 * @param source：	XYZ
+	 * 
+	 * @return:	Array2DRowRealMatrix(3,7)
+	 */
+	private static Array2DRowRealMatrix CalculaterotationMatrixByBursa(Coordinate source) {
+		
+		ArrayRealVector B0 = new ArrayRealVector();		// 1th column
+		ArrayRealVector B1 = new ArrayRealVector();		// 2th column
+		ArrayRealVector B2 = new ArrayRealVector();		// 3th column
+		ArrayRealVector B3 = new ArrayRealVector();		// 4th column
+		ArrayRealVector B4 = new ArrayRealVector();		// 5th column
+		ArrayRealVector B5 = new ArrayRealVector();		// 6th column
+		ArrayRealVector B6 = new ArrayRealVector();		// 7th column
+		
+		B0 = (ArrayRealVector)B0.append(1.0);
+		B0 = (ArrayRealVector)B0.append(0.0);
+		B0 = (ArrayRealVector)B0.append(0.0);
+		
+		B1 = (ArrayRealVector)B1.append(0.0);
+		B1 = (ArrayRealVector)B1.append(1.0);
+		B1 = (ArrayRealVector)B1.append(0.0);
+		
+		B2 = (ArrayRealVector)B2.append(0.0);
+		B2 = (ArrayRealVector)B2.append(0.0);
+		B2 = (ArrayRealVector)B2.append(1.0);
+		
+		B3 = (ArrayRealVector)B3.append(source.getX());
+		B3 = (ArrayRealVector)B3.append(source.getY());
+		B3 = (ArrayRealVector)B3.append(source.getZ());
+		
+		B4 = (ArrayRealVector)B4.append(0.0);
+		B4 = (ArrayRealVector)B4.append(source.getZ());
+		B4 = (ArrayRealVector)B4.append(-source.getY());
+		
+		B5 = (ArrayRealVector)B5.append(-source.getZ());
+		B5 = (ArrayRealVector)B5.append(0.0);
+		B5 = (ArrayRealVector)B5.append(source.getX());
+		
+		B6 = (ArrayRealVector)B6.append(source.getY());
+		B6 = (ArrayRealVector)B6.append(-source.getX());
+		B6 = (ArrayRealVector)B6.append(0.0);
+		
+		Array2DRowRealMatrix B = new Array2DRowRealMatrix(3,7);
+		B.setColumnVector(0, B0);
+		B.setColumnVector(1, B1);
+		B.setColumnVector(2, B2);
+		B.setColumnVector(3, B3);
+		B.setColumnVector(4, B4);
+		B.setColumnVector(5, B5);
+		B.setColumnVector(6, B6);
 
-//	/**
-//	 * 弧度 --> 到度
-//	 * 
-//	 * @param rad
-//	 * @return
-//	 */
-//	public static double rad2Deg(double rad) {
-//		return (180 / Math.PI) * rad;
-//	}
-//
-//	/**
-//	 * 度 --> 弧度
-//	 * 
-//	 * @param rad
-//	 * @return
-//	 */
-//	public static double deg2Rad(double deg) {
-//		return (Math.PI / 180) * deg;
-//	}
-//
-//	/**
-//	 * 秒 转换为 弧度,arc second to rad
-//	 * 
-//	 * @return
-//	 */
-//	public static double as2Rad(double as) {
-//		return deg2Rad(as / 3600);
-//	}
-//	
-//	/**
-//	 * 弧度 转换为秒 , rad to arc second
-//	 * 
-//	 * @return
-//	 */
-//	public static double rad2As(double rad) {
-//		return rad2Deg(rad) * 3600;
-//	}
+		return B;
+	}
+	
+
+
 
 }
