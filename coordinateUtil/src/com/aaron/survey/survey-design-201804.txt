@@ -1,0 +1,7 @@
+
+plan to do:
+
+	1 create the ServenParamters Class
+	2 check if calculateFourParam() is correct ?
+	3 think about merge the calculateServenParam() and calculateFourParam
+	
