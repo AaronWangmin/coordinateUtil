@@ -5,9 +5,7 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.junit.Test;
 
 import com.aaron.survey.ConstantHolder.ArcFormat;
-import com.aaron.survey.ConstantHolder.CoordinateType;
-import com.aaron.survey.coordinate.CoordinateUtil;
-import com.aaron.survey.coordinate.Coordinate;
+import com.aaron.survey.angle.AngleUtil;
 
 public class TestWGS84Ellipsoid {
 	
@@ -43,7 +41,7 @@ public class TestWGS84Ellipsoid {
 		double Y = 4655861.6904;
 		double theta = Math.atan2(Y, X);
 		
-		System.out.println(CoordinateUtil.rad2Deg(theta));
+		System.out.println(AngleUtil.rad2Deg(theta));
 	}
 
 	@Test
@@ -60,8 +58,8 @@ public class TestWGS84Ellipsoid {
 	@Test
 	public void testBLH2ECEF() {
 		
-		double B = CoordinateUtil.deg2Rad(31+16.0/60 + 9.411132/3600);
-		double L = CoordinateUtil.deg2Rad(121+28.0/60 + 57.543924/3600);
+		double B = AngleUtil.deg2Rad(31+16.0/60 + 9.411132/3600);
+		double L = AngleUtil.deg2Rad(121+28.0/60 + 57.543924/3600);
 		double H = 31.537;
 		
 //		double B = CoordTransform.deg2Rad(30.874999463688056);
@@ -76,12 +74,12 @@ public class TestWGS84Ellipsoid {
 	@Test
 	public void testCalculateNEU() {		
 		Coordinate originPoint = CoordinateUtil.BLH2ECEF(new Coordinate(
-				CoordinateUtil.deg2Rad(15),
-				CoordinateUtil.deg2Rad(105),
+				AngleUtil.deg2Rad(15),
+				AngleUtil.deg2Rad(105),
 				0));
 		Coordinate targetPoint = CoordinateUtil.BLH2ECEF(new Coordinate(
-				CoordinateUtil.deg2Rad(15),
-				CoordinateUtil.deg2Rad(135),
+				AngleUtil.deg2Rad(15),
+				AngleUtil.deg2Rad(135),
 				0));
 		Coordinate NEU = CoordinateUtil.ECEF2NEU(originPoint,targetPoint);
 		System.out.println(NEU);
@@ -89,9 +87,9 @@ public class TestWGS84Ellipsoid {
 		double azimuth = CoordinateUtil.calculateAzimuth(NEU);
 		double elevation = CoordinateUtil.calculateElevation(NEU);
 		
-		System.out.println(CoordinateUtil.rad2Deg(azimuth));
+		System.out.println(AngleUtil.rad2Deg(azimuth));
 		
-		System.out.println(CoordinateUtil.rad2Deg(elevation));
+		System.out.println(AngleUtil.rad2Deg(elevation));
 		
 	}
 	
