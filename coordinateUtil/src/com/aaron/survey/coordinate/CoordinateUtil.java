@@ -406,8 +406,6 @@ public class CoordinateUtil {
 				source.getZ());
 	}
 	
-	
-	
 	/**
 	 * 根据 多个 源坐标点，计算 Bursa 旋转矩阵 B
 	 * 
