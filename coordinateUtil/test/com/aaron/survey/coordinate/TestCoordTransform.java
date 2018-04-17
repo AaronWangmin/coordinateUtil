@@ -146,12 +146,11 @@ public class TestCoordTransform {
 		ParamAdjust fourParam = CoordinateUtil.calculateFourParam(sources, targets);
 		
 		// 获取程序计算所得4参数
-				RealVector X = fourParam.calculateX();
+		RealVector X = fourParam.calculateX();
+		System.out.println(X.toString());
 				
 		// 将一个旋转参数的单位设置为：秒		
 		X.setEntry(3, AngleUtil.rad2As(X.getEntry(3)));
-		
-		X.setEntry(2, 1+X.getEntry(2));
 		
 		// 4参数的对比值（已知值）
 		ArrayRealVector ref_X= new ArrayRealVector(
@@ -161,13 +160,35 @@ public class TestCoordTransform {
 		
 		// 若最大值小于 0.001，则成功
 		RealVector diff = (X.add(ref_X.mapMultiplyToSelf(-1))).map(new Abs());
-		assert (diff.getMaxValue() < Math.pow(10, -3));
 		
 		System.out.println("/n---------------------4参数----------------------");
 		System.out.println("diff----------------");
+		
 		System.out.println(diff.toString());
 		
+		assert (diff.getMaxValue() < Math.pow(10, -3));		
+		
 		fourParam.showAdjustResult();
+	}
+	
+	@Test
+	public void testxy2xyByFourParam() {
+		Coordinate source = new Coordinate(3348002.550, 526301.050, 6.78);
+		
+		ArrayRealVector fourParam = new ArrayRealVector(
+				new double[] {-3266736.944308,-439821.976045,0.9999991094,0.0013334703});
+		
+		Coordinate actual = CoordinateUtil.xy2xyByFourParam(source,
+				fourParam,ConstantHolder.ReferenceEllipsoid.BJ54);
+		
+		System.out.println(actual.toString());
+		
+		Coordinate expected = new Coordinate(80560.817037,90943.067126,6.78);
+		System.out.println("X坐标误差: " + (actual.getX() - expected.getX()));
+		System.out.println("Y坐标误差: " + (actual.getY() - expected.getY()));
+		
+		Assert.assertTrue("X坐标误差大于0.1米", Math.abs(actual.getX() - expected.getX())<0.1);
+		Assert.assertTrue("Y坐标误差大于0.1米", Math.abs(actual.getY() - expected.getY())<0.1);
 	}
 	
 }
