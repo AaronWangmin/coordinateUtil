@@ -323,6 +323,35 @@ public class CoordinateUtil {
 	}
 	
 	/**
+	 * 根据2个以上的已知平面坐标 x/y 点对，求取4参数
+	 * 参数平差模型： V = B x - l
+	 * @param sources
+	 * @param targets
+	 * @return
+	 */
+	public static ParamAdjust calculateFourParam(ArrayList<Coordinate> sources,
+															ArrayList<Coordinate> targets) {
+		
+		// 计算常数向量：L(n*1)
+		ArrayRealVector L_delta_X = new ArrayRealVector();
+		for(int i=0;i<sources.size();i++) {
+			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getX());
+			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getY());
+		}
+		
+		// 计算系数矩阵(旋转矩阵)： B(n*4)
+		Array2DRowRealMatrix B = calculateBOfFourParam(sources);
+		
+//		System.out.println("B------------------------------");
+//		System.out.println(B.toString());
+		
+		// 权矩阵 P：delta_x()，单位权，等权观测 
+		Array2DRowRealMatrix P = MatrixUtil.eye(sources.size()*2);
+		
+		return new ParamAdjust(B, P, L_delta_X);
+	}
+	
+	/**
 	 * 根据Bursa 7参数，进行坐标转换
 	 * @param source
 	 * @param servenParam
@@ -351,33 +380,33 @@ public class CoordinateUtil {
 	}
 	
 	/**
-	 * 根据2个以上的已知平面坐标 x/y 点对，求取4参数
-	 * 参数平差模型： V = B x - l
-	 * @param sources
-	 * @param targets
+	 * 根据Bursa 4参数，进行坐标转换
+	 * @param source
+	 * @param fourParam
+	 * @param ellipsoid
 	 * @return
 	 */
-	public static ParamAdjust calculateFourParam(ArrayList<Coordinate> sources,
-															ArrayList<Coordinate> targets) {
+	public static Coordinate xy2xyByFourParam(Coordinate source,ArrayRealVector fourParam,Ellipsoid ellipsoid) {
 		
-		// 计算常数向量：L(n*1)
-		ArrayRealVector L_delta_X = new ArrayRealVector();
-		for(int i=0;i<sources.size();i++) {
-			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getX() - sources.get(i).getX());
-			L_delta_X = (ArrayRealVector)L_delta_X.append(targets.get(i).getY() - sources.get(i).getY());
-		}
+		// 提取原坐标向量：Xs(2*1)
+		ArrayRealVector Xs = new ArrayRealVector(2);
+		Xs.setEntry(0, source.getX());
+		Xs.setEntry(1, source.getY());
 		
-		// 计算系数矩阵(旋转矩阵)： B(n*4)
-		Array2DRowRealMatrix B = calculateBOfFourParam(sources);
+		// 提取旋转矩阵：R(2*2)
+		Array2DRowRealMatrix R = calculateRotationMatrixOfFourParam(source);
 		
-//		System.out.println("B------------------------------");
-//		System.out.println(B.toString());
+		// 转换后的坐标向量
+		RealVector Xt = new ArrayRealVector(
+				R.multiply(MatrixUtil.vector2Matrix(fourParam)).getColumn(0));
 		
-		// 权矩阵 P：delta_x(7*1)，单位权，等权观测 
-		Array2DRowRealMatrix P = MatrixUtil.eye(sources.size()*2);
-		
-		return new ParamAdjust(B, P, L_delta_X);
+		return new Coordinate(ellipsoid,CoordinateType.SPATIAL_RECTANGULAR,
+				Xt.getEntry(0),
+				Xt.getEntry(1),
+				source.getZ());
 	}
+	
+	
 	
 	/**
 	 * 根据 多个 源坐标点，计算 Bursa 旋转矩阵 B
@@ -510,6 +539,9 @@ public class CoordinateUtil {
 		// 第 4  列
 		R.setEntry(0, 3, -source.getY());
 		R.setEntry(1, 3,  source.getX());
+		
+//		R.setEntry(0, 3,  source.getY());
+//		R.setEntry(1, 3, -source.getX());
 		
 //		System.out.println(R.getRowDimension());
 //		System.out.println(R.getColumnDimension());
