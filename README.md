@@ -17,6 +17,6 @@ The programe includes:
 2 CoordinateUtil
 	can transfor XYZ2BLH/BLH2XYZ,BLH2xyh/xyh2BLH
 	can calculale fourParam, servenParam
-	can transform by fourParam and servenParam
+ 	can transform by fourParam and servenParam
 		
 	
